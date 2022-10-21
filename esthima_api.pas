@@ -55,12 +55,12 @@ type
     GenericHeader = 'Authorization: Bearer {token}' + #13 +
       'Accept: application/json; charset=utf-8' + #13 + 'Content-Type: application/json';
 
-    type Token = packed record
+  type Token = packed record
       Value: string;
       expiration: TDateTime;
     end;
 
-    type GenericError = packed record
+  type GenericError = packed record
       code: string;
       message: string;
       informations: string;
@@ -106,7 +106,7 @@ type
     function GetServices: TEsthimaServices;
     function CreateConvention: string;
     function GeneratePDF(id_clinique, id_convention: string): string;
-    function Connect():boolean;
+    function Connect(): boolean;
   end;
 
 
@@ -130,21 +130,22 @@ var
   fs: TFormatSettings;
 begin
   Result := '';
-  fs.DecimalSeparator:='.';
-  fs.ThousandSeparator:='';
+  fs.DecimalSeparator := '.';
+  fs.ThousandSeparator := '';
   if i > m.FieldDefs.Count - 1 then
     exit;
   s := format('"%s":', [m.FieldDefs[i].Name]);
-   with m do
+  with m do
     case FieldDefs[i].DataType of
-      ftString: s := s + format(BoolTostr(FieldDefs[i].Name = 'products', '[%s]', '"%s"'),
-          [FieldByName(FieldDefs[i].Name).AsString]);
-      ftBoolean: s := s + format('%s', [lowercase(
-          BoolTostr(FieldByName(FieldDefs[i].Name).AsBoolean, True))]);
+      ftString: s := s + format(BoolTostr(FieldDefs[i].Name = 'products',
+          '[%s]', '"%s"'), [FieldByName(FieldDefs[i].Name).AsString]);
+      ftBoolean: s := s + format('%s',
+          [lowercase(BoolTostr(FieldByName(FieldDefs[i].Name).AsBoolean, True))]);
       ftInteger: s := s + format('%s', [FieldByName(FieldDefs[i].Name).AsString]);
-      ftDateTime: s := s + format('"%s"', [FormatJSONDate(
-          FieldByName(FieldDefs[i].Name).AsDateTime)]);
-      ftFloat: s := s + format('%s', [FormatFloat('0.00', FieldByName(FieldDefs[i].Name).AsFloat,fs)]);
+      ftDateTime: s := s + format('"%s"',
+          [FormatJSONDate(FieldByName(FieldDefs[i].Name).AsDateTime)]);
+      ftFloat: s := s + format('%s',
+          [FormatFloat('0.00', FieldByName(FieldDefs[i].Name).AsFloat, fs)]);
     end;
   s := s + BoolTostr(i = m.FieldDefs.Count - 1, '', ',' + #13);
   Result := s;
@@ -273,7 +274,7 @@ var
 var
   i: integer;
 begin
-
+  Result := '';
   try
     s := '';
     with E_Convention_DS do
@@ -327,17 +328,6 @@ var
   b: GenericResponse;
 var
   Js: TJSonData;
-
-  function ExtractToken(tok: string): string;
-  var
-    i: integer;
-  begin
-    Result := '';
-    i := pos('.', tok);
-    if i > 0 then
-      Result := copy(tok, i + 1, length(tok) - i);
-  end;
-
 begin
   Result := False;
   ClearError;
@@ -425,7 +415,7 @@ begin
         begin
           Services[i] := JSarr[i].AsString;
         end;
-        end;
+      end;
     end;
   end
   else
@@ -450,6 +440,7 @@ var
 var
   b: GenericResponse;
 begin
+  Result := '';
   ClearError;
   if not GetToken then
     exit;
@@ -485,18 +476,18 @@ end;
 function TEsthima.GeneratePDF(id_clinique, id_convention: string): string;
 var
   Js: TJSonData;
-  SLsave:Tstringlist;
+  SLsave: TStringList;
   JsArr: TJsonArray;
-  PDFName, PDFData: String;
+  PDFName, PDFData: string;
 var
   i: integer;
-  time1,time2:TdateTime;
+  time1, time2: TdateTime;
 var
   a: GenericQuery;
 var
   b: GenericResponse;
 begin
-  Result:='';
+  Result := '';
   ClearError;
   if not GetToken then
     exit;
@@ -510,16 +501,16 @@ begin
     headers := StringReplace(GenericHeader, '{token}', CurToken.Value, [rfReplaceAll]);
     body := '';
   end;
-  time1:=now;
+  time1 := now;
   b := GenericHTTPRequest(a);
-  time2:=now;
-  log(MilliSecondsBetween(time1,time2).toString);
-  SLSave:=Tstringlist.create;
+  time2 := now;
+  log(MilliSecondsBetween(time1, time2).toString);
+  SLSave := TStringList.Create;
   try
-  SLSave.text:=b.body;
-  SLsave.savetofile(ExtractFilePath(Paramstr(0))+'PDFQuerySave.txt');
+    SLSave.Text := b.body;
+    SLsave.savetofile(ExtractFilePath(ParamStr(0)) + 'PDFQuerySave.txt');
   finally
-  SLsave.free;
+    SLsave.Free;
   end;
 
   if b.code = 200 then
@@ -527,29 +518,29 @@ begin
     if IsValidJSON(b.body) then
     begin
       JS := GetJson(b.Body);
-      PDFName := ExtractFilePath(paramstr(0))+JS.GetValue('functional_id')+'.pdf';
-      PDFData:= JS.GetValue('pdf_content');
+      PDFName := ExtractFilePath(ParamStr(0)) + JS.GetValue('functional_id') + '.pdf';
+      PDFData := JS.GetValue('pdf_content');
       try
-      ConvertB64StrToFile(PDFData,PDFName);
-      Result := PDFName;
+        ConvertB64StrToFile(PDFData, PDFName);
+        Result := PDFName;
       finally
       end;
-
-      end;
+    end;
   end
   else
     E_Error := GetError(b.body);
 end;
 
 function TEsthima.Connect(): boolean;
-var SV:TEsthimaservices;
+var
+  SV: TEsthimaservices;
 begin
-  result:=False;
+  Result := False;
   try
-  SV:=GetServices;
-  if length(sv.services)>0 then E_marque:=sv.services[0];
-  PopulateDataSets;
-  Result:=true;
+    SV := GetServices;
+    if length(sv.services) > 0 then E_marque := sv.services[0];
+    PopulateDataSets;
+    Result := True;
   finally
   end;
 end;
