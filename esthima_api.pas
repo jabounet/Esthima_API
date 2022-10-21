@@ -131,7 +131,6 @@ var
 begin
   Result := '';
   fs.DecimalSeparator := '.';
-  fs.ThousandSeparator := '';
   if i > m.FieldDefs.Count - 1 then
     exit;
   s := format('"%s":', [m.FieldDefs[i].Name]);
